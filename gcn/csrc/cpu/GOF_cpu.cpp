@@ -66,8 +66,8 @@ void GOFBackward_cpu_kernel(
 
 at::Tensor GOF_forward_cpu(const at::Tensor& weight,
                            const at::Tensor& gaborFilterBank) {
-  AT_ASSERTM(!weight.type().is_cuda(), "weight must be a CPU tensor");
-  AT_ASSERTM(!gaborFilterBank.type().is_cuda(), "gaborFilterBank must be a CPU tensor");
+  AT_ASSERTM(!weight.is_cuda(), "weight must be a CPU tensor");
+  AT_ASSERTM(!gaborFilterBank.is_cuda(), "gaborFilterBank must be a CPU tensor");
 
   auto nOutputPlane = weight.size(0);
   auto nInputPlane = weight.size(1);
@@ -81,24 +81,24 @@ at::Tensor GOF_forward_cpu(const at::Tensor& weight,
     return output;
   }
 
-  AT_DISPATCH_FLOATING_TYPES(weight.type(), "GOF_forward", [&] {
+  AT_DISPATCH_FLOATING_TYPES(weight.scalar_type(), "GOF_forward", [&] {
     GOFForward_cpu_kernel<scalar_t>(
-         weight.data<scalar_t>(),
-         gaborFilterBank.data<scalar_t>(),
+         weight.data_ptr<scalar_t>(),
+         gaborFilterBank.data_ptr<scalar_t>(),
          nOutputPlane,
          nInputPlane,
          nChannel,
          kH,
          kW,
-         output.data<scalar_t>());
+         output.data_ptr<scalar_t>());
   });
   return output;
 }
 
 at::Tensor GOF_backward_cpu(const at::Tensor& grad_output,
                             const at::Tensor& gaborFilterBank) {
-  AT_ASSERTM(!grad_output.type().is_cuda(), "grad_output must be a CPU tensor");
-  AT_ASSERTM(!gaborFilterBank.type().is_cuda(), "gaborFilterBank must be a CPU tensor");
+  AT_ASSERTM(!grad_output.is_cuda(), "grad_output must be a CPU tensor");
+  AT_ASSERTM(!gaborFilterBank.is_cuda(), "gaborFilterBank must be a CPU tensor");
 
   auto nChannel = gaborFilterBank.size(0);
   auto nOutputPlane = grad_output.size(0) / nChannel;
@@ -112,16 +112,16 @@ at::Tensor GOF_backward_cpu(const at::Tensor& grad_output,
     return grad_weight;
   }
 
-  AT_DISPATCH_FLOATING_TYPES(grad_output.type(), "GOF_backward", [&] {
+  AT_DISPATCH_FLOATING_TYPES(grad_output.scalar_type(), "GOF_backward", [&] {
     GOFBackward_cpu_kernel<scalar_t>(
-         grad_output.data<scalar_t>(),
-         gaborFilterBank.data<scalar_t>(),
+         grad_output.data_ptr<scalar_t>(),
+         gaborFilterBank.data_ptr<scalar_t>(),
          nOutputPlane,
          nInputPlane,
          nChannel,
          kH,
          kW,
-         grad_weight.data<scalar_t>());
+         grad_weight.data_ptr<scalar_t>());
   });
   return grad_weight;
 }
